@@ -27,7 +27,7 @@ export const useAuth = () => {
   return ctx;
 };
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://home-backend.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://home-8zob.onrender.com/api';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {

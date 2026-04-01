@@ -5,14 +5,27 @@ import CategorySection from "@/components/CategorySection";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import TestimonialSection from "@/components/TestimonialSection";
 import Footer from "@/components/Footer";
+import { useState } from "react";
 
 const Index = () => {
+  const [pageLoading, setPageLoading] = useState(true);
+
   return (
     <div className="min-h-screen">
+      {pageLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/90 text-foreground">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-lg font-medium">Loading content…</p>
+            <p className="text-sm text-muted-foreground">Finishing up images and data from server</p>
+          </div>
+        </div>
+      )}
+
       <Navbar />
       <HeroSection />
       <CategorySection />
-      <FeaturedProducts />
+      <FeaturedProducts onLoaded={() => setPageLoading(false)} />
       <TestimonialSection />
       {/* CTA */}
       <section className="section-padding bg-foreground text-center">

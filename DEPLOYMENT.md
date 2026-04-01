@@ -49,7 +49,7 @@ Go to https://render.com and sign up for an account.
    - **Publish Directory**: `dist`
 4. Add Environment Variable:
    ```
-   VITE_API_URL=https://home-backend.onrender.com/api
+   VITE_API_URL=https://home-8zob.onrender.com/api
    ```
 5. Click "Create Static Site"
 
@@ -88,5 +88,5 @@ Would require converting Express routes to Vercel serverless functions (api/ dir
 
 ## URLs after deployment (Render):
 - Frontend: https://home-frontend.onrender.com
-- Backend: https://home-backend.onrender.com
+- Backend: https://home-8zob.onrender.com
 - Database: Internal MongoDB connection

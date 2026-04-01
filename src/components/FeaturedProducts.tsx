@@ -2,8 +2,13 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Product } from "@/data/products";
 import { productsService } from "@/services/productsService";
+import ProgressiveImage from "@/components/ProgressiveImage";
 
-const FeaturedProducts = () => {
+interface FeaturedProductsProps {
+  onLoaded?: () => void;
+}
+
+const FeaturedProducts = ({ onLoaded }: FeaturedProductsProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +25,11 @@ const FeaturedProducts = () => {
     };
     loadProducts();
   }, []);
+  
+  // Notify parent when loading completes
+  useEffect(() => {
+    if (!loading && onLoaded) onLoaded();
+  }, [loading, onLoaded]);
 
   if (loading) {
     return (
@@ -60,12 +70,12 @@ const FeaturedProducts = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.map((product) => (
             <Link key={product._id} to={`/product/${product._id}`} className="group hover-lift bg-card rounded-lg overflow-hidden shadow-sm">
-              <div className="aspect-square overflow-hidden">
-                <img
+                <div className="aspect-square overflow-hidden">
+                <ProgressiveImage
                   src={product.images[0]}
                   alt={product.name}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full"
+                  placeholder={product.images[0]}
                 />
               </div>
               <div className="p-3 sm:p-4">

@@ -18,6 +18,7 @@ export interface Product {
   color: string;
   inStock: boolean;
   driveFolderId?: string;
+  drivePhotos?: import("@/services/productsService").DrivePhoto[];
   createdAt?: string;
   updatedAt?: string;
 }

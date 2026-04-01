@@ -43,7 +43,7 @@
    - **Build Command**: `npm run build`
    - **Publish Directory**: `dist`
 4. Add environment variable:
-   - `VITE_API_URL=https://home-backend.onrender.com/api`
+   - `VITE_API_URL=https://home-8zob.onrender.com/api`
 5. Deploy!
 
 ### 4. Update Frontend API URL

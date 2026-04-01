@@ -14,18 +14,19 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Admin from "./pages/Admin";
+import DriveDemo from "./pages/DriveDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <GuestPopup />
-        <HashRouter>
+    <HashRouter>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <GuestPopup />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/products" element={<Products />} />
@@ -36,11 +37,12 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/drive-demo" element={<DriveDemo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </HashRouter>
-      </AuthProvider>
-    </TooltipProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </HashRouter>
   </QueryClientProvider>
 );
 
