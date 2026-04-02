@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Product } from "@/data/products";
-import { productsService } from "@/services/productsService";
+import { productsService, type DrivePhoto } from "@/services/productsService";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, ChevronLeft, ChevronRight, Share2, ShoppingBag, ArrowLeft } from "lucide-react";
@@ -14,6 +14,7 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [driveImages, setDriveImages] = useState<DrivePhoto[]>([]);
   const { favorites, toggleFavorite, user } = useAuth();
   const { toast } = useToast();
   const [imgIndex, setImgIndex] = useState(0);
@@ -24,6 +25,16 @@ const ProductDetail = () => {
       try {
         const prod = await productsService.getProduct(id);
         setProduct(prod);
+
+        // If product has a Drive folder, fetch images from there
+        if (prod.driveFolderId) {
+          try {
+            const images = await productsService.getProductImages(id);
+            setDriveImages(images);
+          } catch (err) {
+            console.warn('Could not fetch Drive images:', err);
+          }
+        }
 
         // Load related products
         const allProducts = await productsService.getAllProducts();
@@ -67,7 +78,11 @@ const ProductDetail = () => {
   }
 
   const isFav = favorites.includes(product._id);
-  const images = product.images;
+  
+  // Use Drive images if available, otherwise use database images
+  const images = driveImages.length > 0 
+    ? driveImages.map(img => img.imageUrl || img.thumbnailUrl || '')
+    : product.images;
 
   const nextImg = () => setImgIndex((prev) => (prev + 1) % images.length);
   const prevImg = () => setImgIndex((prev) => (prev - 1 + images.length) % images.length);

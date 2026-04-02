@@ -35,13 +35,35 @@ export function ProductLightbox({
     currentPhoto.imageUrl?.toLowerCase().match(/\.(mov|mp4|m4v|avi|webm)$/)
   );
 
-  // For Google Drive photos, use the preview URL for better quality
+  // For Google Drive photos, use the preview URL for better quality with cache-busting
   const drivePreviewUrl = isDrivePhoto
-    ? `https://drive.google.com/file/d/${(currentPhoto as DrivePhoto).id}/preview`
+    ? `https://drive.google.com/file/d/${(currentPhoto as DrivePhoto).id}/preview?t=${Date.now()}`
     : null;
 
+  // Add cache-busting for backend-proxied URLs and relative paths
+  const addCacheBusting = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    try {
+      // For relative URLs (from backend), add cache-bust parameter
+      if (url.startsWith('/')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      // For absolute Google Drive URLs, add cache-bust parameter
+      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   const imageSrc = isDrivePhoto
-    ? (currentPhoto as DrivePhoto).imageUrl || (currentPhoto as DrivePhoto).thumbnailUrl
+    ? addCacheBusting((currentPhoto as DrivePhoto).imageUrl) || addCacheBusting((currentPhoto as DrivePhoto).thumbnailUrl)
     : currentPhoto as string;
 
   const goNext = () => {

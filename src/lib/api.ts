@@ -34,7 +34,8 @@ export const getMemoryPhotos = async (memoryId: string, token: string): Promise<
     throw new Error('Failed to fetch memory photos');
   }
 
-  return response.json();
+  const data: MemoryPhoto[] = await response.json();
+  return data;
 };
 
 export const getMemories = async (token: string): Promise<Memory[]> => {

@@ -28,14 +28,36 @@ function PhotoTile({
   );
   const isVideo = isVideoMime || isVideoExt;
 
+  // Add cache-busting for backend-proxied URLs and relative paths
+  const addCacheBusting = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    try {
+      // For relative URLs (from backend), add cache-bust parameter
+      if (url.startsWith('/')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      // For absolute Google Drive URLs, add cache-bust parameter
+      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   return (
     <div
       className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group sepia-card"
       onClick={onClick}
     >
       <ProgressiveImage
-        src={photo.imageUrl || photo.thumbnailUrl || ''}
-        placeholder={photo.thumbnailUrl}
+        src={addCacheBusting(photo.imageUrl) || addCacheBusting(photo.thumbnailUrl) || ''}
+        placeholder={addCacheBusting(photo.thumbnailUrl)}
         alt={alt}
         className={`w-full h-full`}
         onLoad={() => setLoaded(true)}
@@ -148,11 +170,33 @@ export default function PhotoGallery({ memory, onBack }: PhotoGalleryProps) {
   // high-quality preview page inside an iframe for best fidelity.
   const isDriveSource = !!currentPhoto?.id;
   const drivePreviewUrl = isDriveSource
-    ? `https://drive.google.com/file/d/${currentPhoto.id}/preview`
+    ? `https://drive.google.com/file/d/${currentPhoto.id}/preview?t=${Date.now()}`
     : null;
 
+  // Add cache-busting for backend-proxied URLs and relative paths
+  const addCacheBusting = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    try {
+      // For relative URLs (from backend), add cache-bust parameter
+      if (url.startsWith('/')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      // For absolute Google Drive URLs, add cache-bust parameter
+      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}t=${Date.now()}`;
+      }
+      
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   const currentMediaSrc = currentPhoto
-    ? currentPhoto.imageUrl || currentPhoto.thumbnailUrl
+    ? addCacheBusting(currentPhoto.imageUrl) || addCacheBusting(currentPhoto.thumbnailUrl)
     : "";
 
   return (
