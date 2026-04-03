@@ -25,7 +25,7 @@ export interface Product {
 
 export const allProducts: Product[] = [
   {
-    id: 1,
+    _id: "1",
     name: "Resin Geode Wall Clock",
     category: "Resin Art",
     price: "₹2,499",
@@ -38,7 +38,7 @@ export const allProducts: Product[] = [
     inStock: true,
   },
   {
-    id: 2,
+    _id: "2",
     name: "Soy Wax Scented Candle",
     category: "Wax Candles",
     price: "₹899",
@@ -51,7 +51,7 @@ export const allProducts: Product[] = [
     inStock: true,
   },
   {
-    id: 3,
+    _id: "3",
     name: "Geometric Concrete Planter",
     category: "Concrete Decor",
     price: "₹1,299",
@@ -64,7 +64,7 @@ export const allProducts: Product[] = [
     inStock: true,
   },
   {
-    id: 4,
+    _id: "4",
     name: "Gold Marble Resin Bowl",
     category: "Resin Art",
     price: "₹1,899",
@@ -77,7 +77,7 @@ export const allProducts: Product[] = [
     inStock: true,
   },
   {
-    id: 5,
+    _id: "5",
     name: "Pillar Candle Set",
     category: "Wax Candles",
     price: "₹1,499",
@@ -90,7 +90,7 @@ export const allProducts: Product[] = [
     inStock: true,
   },
   {
-    id: 6,
+    _id: "6",
     name: "Kintsugi Concrete Bookends",
     category: "Concrete Decor",
     price: "₹1,799",
