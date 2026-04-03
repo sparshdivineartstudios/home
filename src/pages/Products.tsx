@@ -179,7 +179,7 @@ const Products = () => {
               <SkeletonLoader count={8} />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {filtered.filter(p => p._id && p.images && p.images.length > 0).map((product) => (
+              {filtered.filter(p => p._id).map((product) => (
                 <div key={product._id} className="group hover-lift bg-card rounded-lg overflow-hidden shadow-sm relative">
                   {/* Fav button */}
                   <button

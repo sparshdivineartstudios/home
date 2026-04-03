@@ -68,14 +68,14 @@ const FeaturedProducts = ({ onLoaded }: FeaturedProductsProps) => {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.filter(p => p._id && p.images && p.images.length > 0).map((product) => (
+          {products.filter(p => p._id).map((product) => (
             <Link key={product._id} to={`/product/${product._id}`} className="group hover-lift bg-card rounded-lg overflow-hidden shadow-sm">
                 <div className="aspect-square overflow-hidden">
                 <ProgressiveImage
-                  src={product.images[0] || ''}
+                  src={product.images[0]}
                   alt={product.name}
                   className="w-full h-full"
-                  placeholder={product.images[0] || ''}
+                  placeholder={product.images[0]}
                 />
               </div>
               <div className="p-3 sm:p-4">
