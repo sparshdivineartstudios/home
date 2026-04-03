@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import GuestPopup from "@/components/GuestPopup";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
@@ -24,6 +25,7 @@ const App = () => (
     <HashRouter>
       <TooltipProvider>
         <AuthProvider>
+          <ScrollToTop />
           <Toaster />
           <Sonner />
           <GuestPopup />

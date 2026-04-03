@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SkeletonLoader } from "@/components/LoadingSpinner";
 import { Product, categories, materials, colors, sortOptions } from "@/data/products";
 import { productsService } from "@/services/productsService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -174,7 +175,10 @@ const Products = () => {
             <p className="text-sm text-muted-foreground mb-4">{filtered.length} product{filtered.length !== 1 ? "s" : ""} found</p>
 
             {/* Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {loading ? (
+              <SkeletonLoader count={8} />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filtered.map((product) => (
                 <div key={product._id} className="group hover-lift bg-card rounded-lg overflow-hidden shadow-sm relative">
                   {/* Fav button */}
@@ -203,8 +207,9 @@ const Products = () => {
                 </div>
               ))}
             </div>
+            )}
 
-            {filtered.length === 0 && (
+            {filtered.length === 0 && !loading && (
               <div className="text-center py-16">
                 <p className="text-muted-foreground mb-4">No products match your filters.</p>
                 <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
