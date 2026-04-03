@@ -21,16 +21,23 @@ const ProductDetail = () => {
 
   useEffect(() => {
     const loadProduct = async () => {
-      if (!id) return;
+      if (!id || id === 'undefined') return;
       try {
         const prod = await productsService.getProduct(id);
+        if (!prod || !prod._id) {
+          console.error('Invalid product:', prod);
+          setLoading(false);
+          return;
+        }
         setProduct(prod);
 
         // If product has a Drive folder, fetch images from there
         if (prod.driveFolderId) {
           try {
             const images = await productsService.getProductImages(id);
-            setDriveImages(images);
+            if (images && images.length > 0) {
+              setDriveImages(images);
+            }
           } catch (err) {
             console.warn('Could not fetch Drive images:', err);
           }
@@ -38,7 +45,9 @@ const ProductDetail = () => {
 
         // Load related products
         const allProducts = await productsService.getAllProducts();
-        const relatedProds = allProducts.filter((p) => p.category === prod.category && p._id !== prod._id).slice(0, 3);
+        const relatedProds = allProducts
+          .filter((p) => p && p._id && p.category === prod.category && p._id !== prod._id)
+          .slice(0, 3);
         setRelated(relatedProds);
       } catch (error) {
         console.error('Error loading product:', error);
@@ -80,12 +89,16 @@ const ProductDetail = () => {
   const isFav = favorites.includes(product._id);
   
   // Use Drive images if available, otherwise use database images
-  const images = driveImages.length > 0 
-    ? driveImages.map(img => img.imageUrl || img.thumbnailUrl || '')
-    : product.images;
+  const images = (driveImages.length > 0 
+    ? driveImages.map(img => img.imageUrl || img.thumbnailUrl || '').filter(Boolean)
+    : (product.images || [])).filter(Boolean);
 
-  const nextImg = () => setImgIndex((prev) => (prev + 1) % images.length);
-  const prevImg = () => setImgIndex((prev) => (prev - 1 + images.length) % images.length);
+  const nextImg = () => {
+    if (images.length > 0) setImgIndex((prev) => (prev + 1) % images.length);
+  };
+  const prevImg = () => {
+    if (images.length > 0) setImgIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -113,30 +126,38 @@ const ProductDetail = () => {
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img
-                  src={images[imgIndex]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-                {images.length > 1 && (
+                {images.length > 0 ? (
                   <>
-                    <button onClick={prevImg} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
-                      <ChevronLeft size={20} className="text-foreground" />
-                    </button>
-                    <button onClick={nextImg} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
-                      <ChevronRight size={20} className="text-foreground" />
-                    </button>
+                    <img
+                      src={images[imgIndex]}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {images.length > 1 && (
+                      <>
+                        <button onClick={prevImg} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                          <ChevronLeft size={20} className="text-foreground" />
+                        </button>
+                        <button onClick={nextImg} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                          <ChevronRight size={20} className="text-foreground" />
+                        </button>
+                      </>
+                    )}
                   </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <span>Image unavailable</span>
+                  </div>
                 )}
               </div>
               {/* Thumbnails */}
               {images.length > 1 && (
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2">
                   {images.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setImgIndex(i)}
-                      className={`w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${
+                      className={`w-20 h-20 rounded-md overflow-hidden border-2 flex-shrink-0 transition-colors ${
                         i === imgIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
                       }`}
                     >
