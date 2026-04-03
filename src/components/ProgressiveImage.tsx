@@ -13,9 +13,15 @@ interface Props {
 export default function ProgressiveImage({ src, alt = '', className = '', placeholder, srcSet, sizes, onLoad }: Props) {
   const [loaded, setLoaded] = useState(false);
   const highRef = useRef<HTMLImageElement | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     setLoaded(false);
+    setError(false);
+    if (!src) {
+      setError(true);
+      return;
+    }
     const img = new Image();
     if (srcSet) img.srcset = srcSet;
     img.src = src;
@@ -25,6 +31,7 @@ export default function ProgressiveImage({ src, alt = '', className = '', placeh
     };
     img.onerror = () => {
       setLoaded(true);
+      setError(true);
       onLoad?.();
     };
     return () => {
@@ -32,6 +39,14 @@ export default function ProgressiveImage({ src, alt = '', className = '', placeh
       img.onerror = null;
     };
   }, [src, srcSet, onLoad]);
+
+  if (error || !src) {
+    return (
+      <div className={`w-full h-full bg-muted flex items-center justify-center ${className}`}>
+        <span className="text-xs text-muted-foreground">Image unavailable</span>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative overflow-hidden ${className}`}>

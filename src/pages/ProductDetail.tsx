@@ -238,7 +238,7 @@ const ProductDetail = () => {
             <div className="container-custom">
               <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-8 text-center">You May Also Like</h2>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {related.filter(p => p._id).map((p) => (
+                {related.filter(p => p._id && p.images && p.images.length > 0).map((p) => (
                   <Link key={p._id} to={`/product/${p._id}`} className="group hover-lift bg-card rounded-lg overflow-hidden shadow-sm">
                     <div className="aspect-square overflow-hidden">
                       <img src={p.images[0]} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
