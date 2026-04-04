@@ -29,18 +29,15 @@ export function ProductLightbox({
 
   const currentPhoto = photos[currentIndex];
   const isDrivePhoto = typeof currentPhoto === 'object' && currentPhoto.id;
-  const isVideo = isDrivePhoto && (
-    currentPhoto.mimeType?.startsWith("video/") ||
-    currentPhoto.name?.toLowerCase().match(/\.(mov|mp4|m4v|avi|webm)$/) ||
-    currentPhoto.imageUrl?.toLowerCase().match(/\.(mov|mp4|m4v|avi|webm)$/)
-  );
+  const isCurrentVideo = currentPhoto?.mimeType?.startsWith("video/") ?? false;
 
-  // For Google Drive photos, use the preview URL for better quality with cache-busting
-  const drivePreviewUrl = isDrivePhoto
-    ? `https://drive.google.com/file/d/${(currentPhoto as DrivePhoto).id}/preview?t=${Date.now()}`
+  // For Google Drive photos, use the preview URL for best fidelity
+  const isDriveSource = !!currentPhoto?.id;
+  const drivePreviewUrl = isDriveSource
+    ? `https://drive.google.com/file/d/${(currentPhoto as DrivePhoto).id}/preview`
     : null;
 
-  // Add cache-busting for backend-proxied URLs and relative paths
+  // Add cache-busting and handle both relative and absolute URLs
   const addCacheBusting = (url?: string): string | undefined => {
     if (!url) return undefined;
     try {
@@ -50,8 +47,8 @@ export function ProductLightbox({
         return `${url}${separator}t=${Date.now()}`;
       }
       
-      // For absolute Google Drive URLs, add cache-bust parameter
-      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+      // For absolute Google Drive URLs (NOT preview), add cache-bust parameter
+      if (url.includes('drive.google.com') && !url.includes('/preview')) {
         const separator = url.includes('?') ? '&' : '?';
         return `${url}${separator}t=${Date.now()}`;
       }
@@ -131,15 +128,15 @@ export function ProductLightbox({
         className="w-[90vw] max-w-[90vw] max-h-[85vh] h-[85vh] rounded-lg shadow-2xl overflow-hidden bg-black"
         onClick={(e) => e.stopPropagation()}
       >
-        {drivePreviewUrl && !isVideo ? (
+        {drivePreviewUrl ? (
           <iframe
             src={drivePreviewUrl}
             className="w-full h-full border-0"
-            allow="fullscreen"
+            allow="autoplay; fullscreen"
             allowFullScreen
             title={`${productName} - Image ${currentIndex + 1}`}
           />
-        ) : isVideo ? (
+        ) : isCurrentVideo ? (
           <video
             src={imageSrc}
             controls
@@ -171,7 +168,7 @@ export function ProductLightbox({
       </p>
 
       {/* Video indicator for Google Drive videos */}
-      {isVideo && (
+      {isCurrentVideo && (
         <div className="absolute top-4 left-4 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-foreground/80 text-primary-foreground text-sm font-body">
           <Video className="w-4 h-4" />
           Video
