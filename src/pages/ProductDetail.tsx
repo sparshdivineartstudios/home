@@ -14,14 +14,23 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [driveImages, setDriveImages] = useState<DrivePhoto[]>([]);
-  const { favorites, toggleFavorite, user } = useAuth();
+  const { favorites, toggleFavorite, user, token } = useAuth();
   const { toast } = useToast();
   const [imgIndex, setImgIndex] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    if (!id || id === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
     const loadProduct = async () => {
-      if (!id || id === 'undefined') return;
       try {
         const prod = await productsService.getProduct(id);
         if (!prod || !prod._id) {
@@ -29,34 +38,58 @@ const ProductDetail = () => {
           setLoading(false);
           return;
         }
+        if (cancelled) return;
+        
+        console.log('📦 Product loaded:', prod.name);
+        console.log('📁 driveFolderId:', prod.driveFolderId);
+        console.log('🔑 Token available:', !!token);
+        
         setProduct(prod);
 
-        // If product has a Drive folder, fetch images from there
+        // Prefer Drive photos when folder is linked (works for both guests and logged-in users)
         if (prod.driveFolderId) {
+          console.log('🔄 Fetching Drive images for folder:', prod.driveFolderId);
           try {
-            const images = await productsService.getProductImages(id);
-            if (images && images.length > 0) {
-              setDriveImages(images);
+            const photos = await productsService.getProductImages(id, token || undefined);
+            if (cancelled) return;
+            if (photos && photos.length > 0) {
+              console.log('✅ Loaded Drive photos:', photos);
+              console.log('First photo ID:', photos[0].id);
+              setDriveImages(photos);
+            } else {
+              console.warn('⚠️ No photos returned from API');
             }
           } catch (err) {
-            console.warn('Could not fetch Drive images:', err);
+            console.warn('❌ Could not fetch Drive images:', err);
+            // silently ignore, will use product.images instead
           }
+        } else {
+          console.log('⏭️ No driveFolderId for this product');
         }
 
         // Load related products
         const allProducts = await productsService.getAllProducts();
+        if (cancelled) return;
         const relatedProds = allProducts
           .filter((p) => p && p._id && p.category === prod.category && p._id !== prod._id)
           .slice(0, 3);
         setRelated(relatedProds);
       } catch (error) {
+        if (cancelled) return;
         console.error('Error loading product:', error);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
+
     loadProduct();
-  }, [id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, token]);
 
   if (loading) {
     return (
@@ -88,16 +121,24 @@ const ProductDetail = () => {
 
   const isFav = favorites.includes(product._id);
   
-  // Use Drive images if available, otherwise use database images
-  const images = (driveImages.length > 0 
-    ? driveImages.map(img => img.imageUrl || img.thumbnailUrl || '').filter(Boolean)
-    : (product.images || [])).filter(Boolean);
+  // Use Drive images if available, otherwise fallback to database images
+  const photos = driveImages.length > 0 ? driveImages : [];
+  const dbImages = (product.images || []).filter(Boolean);
+  const hasPhotos = photos.length > 0;
+  const allImages = hasPhotos ? photos : dbImages;
+
+  const currentPhoto = hasPhotos ? photos[imgIndex] : null;
+
+  // Get the full-size image URL (prefer imageUrl which is the full Drive export)
+  const currentImageUrl = hasPhotos 
+    ? (currentPhoto?.imageUrl || currentPhoto?.thumbnailUrl || currentPhoto?.webContentLink || '')
+    : (dbImages[imgIndex] || '');
 
   const nextImg = () => {
-    if (images.length > 0) setImgIndex((prev) => (prev + 1) % images.length);
+    if (allImages.length > 0) setImgIndex((prev) => (prev + 1) % allImages.length);
   };
   const prevImg = () => {
-    if (images.length > 0) setImgIndex((prev) => (prev - 1 + images.length) % images.length);
+    if (allImages.length > 0) setImgIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
   const handleShare = () => {
@@ -126,19 +167,24 @@ const ProductDetail = () => {
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                {images.length > 0 ? (
+                {allImages.length > 0 && currentImageUrl ? (
+                  // Display image via backend proxy (handles all formats: .mov preview, .heic conversion, etc.)
                   <>
                     <img
-                      src={images[imgIndex]}
+                      src={currentImageUrl}
                       alt={product.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.warn('Image failed to load:', currentImageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
-                    {images.length > 1 && (
+                    {allImages.length > 1 && (
                       <>
-                        <button onClick={prevImg} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                        <button onClick={prevImg} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors z-10">
                           <ChevronLeft size={20} className="text-foreground" />
                         </button>
-                        <button onClick={nextImg} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                        <button onClick={nextImg} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors z-10">
                           <ChevronRight size={20} className="text-foreground" />
                         </button>
                       </>
@@ -150,20 +196,53 @@ const ProductDetail = () => {
                   </div>
                 )}
               </div>
+              
+              {/* Navigation arrows for Drive images */}
+              {hasPhotos && allImages.length > 1 && (
+                <div className="flex gap-3 justify-center">
+                  <button onClick={prevImg} className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                    <ChevronLeft size={20} className="text-foreground" />
+                  </button>
+                  <span className="flex items-center px-4 text-sm text-muted-foreground">
+                    {imgIndex + 1} / {allImages.length}
+                  </span>
+                  <button onClick={nextImg} className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors">
+                    <ChevronRight size={20} className="text-foreground" />
+                  </button>
+                </div>
+              )}
+              
               {/* Thumbnails */}
-              {images.length > 1 && (
+              {allImages.length > 1 && (
                 <div className="flex gap-3 overflow-x-auto pb-2">
-                  {images.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setImgIndex(i)}
-                      className={`w-20 h-20 rounded-md overflow-hidden border-2 flex-shrink-0 transition-colors ${
-                        i === imgIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+                  {allImages.map((img, i) => {
+                    const thumbUrl = typeof img === 'string' ? img : (img.thumbnailUrl || img.imageUrl);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setImgIndex(i)}
+                        className={`w-20 h-20 rounded-md overflow-hidden border-2 flex-shrink-0 transition-colors ${
+                          i === imgIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        {thumbUrl ? (
+                          <img 
+                            src={thumbUrl} 
+                            alt={`Thumbnail ${i + 1}`}
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              console.warn(`Thumbnail ${i} failed to load:`, thumbUrl);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                            No img
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

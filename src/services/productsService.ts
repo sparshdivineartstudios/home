@@ -30,20 +30,7 @@ export const productsService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const response = await fetch(`${API_BASE}/products/${productId}/images`, { headers });
     if (!response.ok) throw new Error('Failed to fetch product images');
-    const data: DrivePhoto[] = await response.json();
-    
-    // Add cache-busting to all Google Drive URLs
-    const addCacheBust = (url?: string) => {
-      if (!url) return url;
-      const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}t=${Date.now()}`;
-    };
-    
-    return data.map(photo => ({
-      ...photo,
-      imageUrl: addCacheBust(photo.imageUrl),
-      thumbnailUrl: addCacheBust(photo.thumbnailUrl),
-    }));
+    return await response.json();
   },
 
   async createProduct(productData: Omit<Product, '_id' | 'createdAt' | 'updatedAt'>, token: string): Promise<Product> {
